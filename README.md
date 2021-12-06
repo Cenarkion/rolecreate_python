@@ -19,9 +19,9 @@ Save the script to somewhere in your path.
 run it via
 ```
 rolecreate -n <new role name>
+```
 This will create a new ansible role structure, populated with the standard files and directories.
 It will init and push this to your github
-```
 
 Dependencies
 ------------
