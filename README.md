@@ -7,10 +7,10 @@ It likely breaks many Python rules, standards and best practise; simply due to i
 Requirements
 ------------
 
-Requires a Python3 environment.
-Requires the requests module.
-Requires a related 'secrets.py' file, populated with your GITHUB_TOKEN details.
-Requires your git global configs to have been completed
+Requires a Python3 environment.  
+Requires the requests module.  
+Requires a related 'secrets.py' file, populated with your GITHUB_TOKEN details.  
+Requires your git global configs to have been completed  
 
 Example
 --------------
@@ -26,7 +26,7 @@ It will init and push this to your github
 Dependencies
 ------------
 
-Python3
+Python3  
 requests module
 
 License
