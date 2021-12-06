@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+import os
+import requests
+from pprint import pprint
+from secrets import GITHUB_TOKEN
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--name", "-n", type=str, dest="name", required=True)
+parser.add_argument("--private", "-p", dest="is_private", action="store_true")
+args = parser.parse_args()
+repo_name = args.name
+is_private = args.is_private
+#print(args)
+
+API_URL = "https://api.github.com"
+if is_private:
+    payload = '{"name": "' + repo_name + '", "private": true}'
+else:
+    payload ='{"name": "' + repo_name + '", "private": false}'
+
+headers = {
+        "Authorization": "token " + GITHUB_TOKEN,
+        "Accept": "application/vnd.github.v3+json"
+}
+
+try:
+    r = requests.post(API_URL+"/user/repos", data=payload, headers=headers)
+    r.raise_for_status()
+#pprint(r.json())
+
+except requests.exceptions.requestException as err:
+        raise SystemExit(err)
+
+
+try:
+    #REPO_PATH="/mnt/c/Users/calin/Documents/Git/"
+    REPO_PATH="/home/calin/Documents/Git/"
+    os.chdir(REPO_PATH)
+    os.system("mkdir " + repo_name)
+    os.system("mkdir " + repo_name + "/roles")
+    os.chdir(REPO_PATH + repo_name + "/roles")
+    os.system("ansible-galaxy init " + repo_name)
+    os.chdir(REPO_PATH + repo_name)
+    os.system("git init")
+    os.system("git remote add origin git@github.com:Cenarkion/" + repo_name + ".git")
+    os.system("mv " + REPO_PATH + repo_name + "/roles/" + repo_name + "/README.md .")
+    os.system("mv " + REPO_PATH + repo_name + "/roles/" + repo_name + "/tests/test.yml " + repo_name + ".yml")
+    #with open (REPO_PATH + repo_name + "/README.md", "r") as sources:
+    #    lines = sources.readlines()
+    #with open (REPO_PATH + repo_name + "/README.md", "w") as sources:
+    #    for line in lines:
+    #        sources.write(re.sub(r'^ROLE NAME', repo_name, line))
+    os.system("git add . && git commit -m 'Initial Commit' && git push origin master")
+except FileExistsError as err:
+    raise SystemExit(err)
+
