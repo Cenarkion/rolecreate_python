@@ -1,40 +1,64 @@
-Role Name
-=========
+# Ansible Role Creator
 
-This is a simple python script, written by somebody with little understanding of Python.
-It likely breaks many Python rules, standards and best practise; simply due to ignorance on my part.
+This script automates the creation of a new Ansible role. It creates a new directory structure for the role, initializes a git repository, and pushes it to your GitHub account.
 
-Requirements
-------------
+## Requirements
 
-Requires a Python3 environment.  
-Requires the requests module.  
-Requires a related 'secrets.py' file, populated with your GITHUB_TOKEN details.  
-Requires your git global configs to have been completed  
+- Python 3
+- `requests` module (`pip install requests`)
+- `ansible` (`pip install ansible`)
+- Git
 
-Example
---------------
+## Installation
 
-Save the script to somewhere in your path.
-run it via
+1.  Clone this repository or download the `rolecreate` script.
+2.  Make sure the script is executable:
+    ```bash
+    chmod +x rolecreate
+    ```
+3.  Place the script in a directory that is in your system's `PATH` (e.g., `/usr/local/bin`).
+
+## Usage
+
+```bash
+rolecreate -n <new_role_name> [options]
 ```
-rolecreate -n <new role name>
+
+### Options
+
+-   `-n`, `--name`: (Required) The name of the new Ansible role.
+-   `-p`, `--private`: Create a private GitHub repository.
+-   `--repo-path`: The local path where the role directory will be created. Defaults to the current directory.
+-   `--github-username`: Your GitHub username. The script will attempt to get this from your git configuration if not provided.
+
+### GitHub Token
+
+The script needs a GitHub personal access token with the `repo` scope to create repositories on your behalf. You can provide the token in one of two ways:
+
+1.  **Environment Variable (Recommended):**
+    Set the `GITHUB_TOKEN` environment variable before running the script.
+    ```bash
+    export GITHUB_TOKEN='your_github_token'
+    ./rolecreate -n my-new-role
+    ```
+2.  **Interactive Prompt:**
+    If the `GITHUB_TOKEN` environment variable is not set, the script will securely prompt you to enter it.
+
+### Example
+
+```bash
+# Create a new public role in the current directory
+./rolecreate -n my-ansible-role
+
+# Create a new private role in a specific directory
+./rolecreate -n my-secret-role -p --repo-path /tmp/ansible/roles --github-username my-github-user
 ```
-This will create a new ansible role structure, populated with the standard files and directories.
-It will init and push this to your github
 
-Dependencies
-------------
-
-Python3  
-requests module
-
-License
--------
+## License
 
 BSD
 
-Author Information
-------------------
+## Author Information
 
 Jeff Wilkins
+(Refactored by Gemini)

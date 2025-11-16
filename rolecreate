@@ -1,57 +1,114 @@
 #!/usr/bin/env python3
 import os
 import requests
-from pprint import pprint
-from secrets import GITHUB_TOKEN
 import argparse
+import subprocess
+import sys
+import getpass
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--name", "-n", type=str, dest="name", required=True)
-parser.add_argument("--private", "-p", dest="is_private", action="store_true")
-args = parser.parse_args()
-repo_name = args.name
-is_private = args.is_private
-#print(args)
+def parse_arguments():
+    """Parses command-line arguments."""
+    parser = argparse.ArgumentParser(description="Create a new Ansible role and push it to GitHub.")
+    parser.add_argument("--name", "-n", type=str, dest="name", required=True, help="The name of the new role.")
+    parser.add_argument("--private", "-p", dest="is_private", action="store_true", help="Create a private repository.")
+    parser.add_argument("--repo-path", type=str, dest="repo_path", default=".", help="The path to the directory where the new role will be created.")
+    parser.add_argument("--github-username", type=str, dest="github_username", help="The GitHub username.")
+    return parser.parse_args()
 
-API_URL = "https://api.github.com"
-if is_private:
-    payload = '{"name": "' + repo_name + '", "private": true}'
-else:
-    payload ='{"name": "' + repo_name + '", "private": false}'
-
-headers = {
-        "Authorization": "token " + GITHUB_TOKEN,
+def create_github_repo(repo_name, is_private, token):
+    """Creates a new GitHub repository."""
+    API_URL = "https://api.github.com"
+    payload = f'{{"name": "{repo_name}", "private": {str(is_private).lower()}}}'
+    headers = {
+        "Authorization": f"token {token}",
         "Accept": "application/vnd.github.v3+json"
-}
+    }
+    try:
+        r = requests.post(f"{API_URL}/user/repos", data=payload, headers=headers)
+        if r.status_code == 422:
+            print(f"Error creating GitHub repository: A repository with the name '{repo_name}' already exists.")
+            sys.exit(1)
+        r.raise_for_status()
+        print(f"Successfully created GitHub repository: {repo_name}")
+    except requests.exceptions.RequestException as err:
+        print(f"Error creating GitHub repository: {err}")
+        sys.exit(1)
 
-try:
-    r = requests.post(API_URL+"/user/repos", data=payload, headers=headers)
-    r.raise_for_status()
-#pprint(r.json())
+def create_ansible_role(repo_name, repo_path, github_username):
+    """Creates a new Ansible role structure."""
+    full_repo_path = os.path.join(repo_path, repo_name)
+    roles_path = os.path.join(full_repo_path, "roles")
+    
+    try:
+        os.makedirs(roles_path, exist_ok=True)
+    except FileExistsError:
+        print(f"Error: Directory '{roles_path}' already exists.")
+        sys.exit(1)
 
-except requests.exceptions.requestException as err:
-        raise SystemExit(err)
+    try:
+        os.chdir(roles_path)
+        subprocess.run(["ansible-galaxy", "init", repo_name], check=True, capture_output=True, text=True)
+        
+        os.chdir(full_repo_path)
+        subprocess.run(["git", "init"], check=True, capture_output=True, text=True)
+        subprocess.run(["git", "remote", "add", "origin", f"git@github.com:{github_username}/{repo_name}.git"], check=True, capture_output=True, text=True)
+        
+        os.rename(os.path.join(roles_path, repo_name, "README.md"), "README.md")
+        os.rename(os.path.join(roles_path, repo_name, "tests", "test.yml"), f"{repo_name}.yml")
+        
+        print(f"Successfully created Ansible role structure in: {full_repo_path}")
 
+    except subprocess.CalledProcessError as err:
+        print(f"Error creating Ansible role: Command '{err.cmd}' failed with exit code {err.returncode}.")
+        print(f"Stderr: {err.stderr}")
+        sys.exit(1)
+    except FileNotFoundError as err:
+        print(f"Error: {err}. Make sure 'ansible-galaxy' and 'git' are installed and in your PATH.")
+        sys.exit(1)
 
-try:
-    #REPO_PATH="/mnt/c/Users/calin/Documents/Git/"
-    REPO_PATH="/home/calin/Documents/Git/"
-    os.chdir(REPO_PATH)
-    os.system("mkdir " + repo_name)
-    os.system("mkdir " + repo_name + "/roles")
-    os.chdir(REPO_PATH + repo_name + "/roles")
-    os.system("ansible-galaxy init " + repo_name)
-    os.chdir(REPO_PATH + repo_name)
-    os.system("git init")
-    os.system("git remote add origin git@github.com:Cenarkion/" + repo_name + ".git")
-    os.system("mv " + REPO_PATH + repo_name + "/roles/" + repo_name + "/README.md .")
-    os.system("mv " + REPO_PATH + repo_name + "/roles/" + repo_name + "/tests/test.yml " + repo_name + ".yml")
-    #with open (REPO_PATH + repo_name + "/README.md", "r") as sources:
-    #    lines = sources.readlines()
-    #with open (REPO_PATH + repo_name + "/README.md", "w") as sources:
-    #    for line in lines:
-    #        sources.write(re.sub(r'^ROLE NAME', repo_name, line))
-    os.system("git add . && git commit -m 'Initial Commit' && git push origin master")
-except FileExistsError as err:
-    raise SystemExit(err)
+def push_to_github():
+    """Pushes the new role to GitHub."""
+    try:
+        subprocess.run(["git", "add", "."], check=True, capture_output=True, text=True)
+        subprocess.run(["git", "commit", "-m", "Initial Commit"], check=True, capture_output=True, text=True)
+        subprocess.run(["git", "push", "origin", "master"], check=True, capture_output=True, text=True)
+        print("Successfully pushed initial commit to GitHub.")
+    except subprocess.CalledProcessError as err:
+        print(f"Error pushing to GitHub: Command '{err.cmd}' failed with exit code {err.returncode}.")
+        print(f"Stderr: {err.stderr}")
+        sys.exit(1)
+    except FileNotFoundError as err:
+        print(f"Error: {err}. Make sure 'git' is installed and in your PATH.")
+        sys.exit(1)
+
+def main():
+    """Main function."""
+    args = parse_arguments()
+    
+    token = os.environ.get("GITHUB_TOKEN")
+    if not token:
+        try:
+            token = getpass.getpass("GitHub token not found. Please enter your GitHub personal access token: ")
+        except getpass.GetPassWarning:
+            print("Could not read password securely.")
+            token = input("GitHub token not found. Please enter your GitHub personal access token: ")
+
+    if not token:
+        print("GitHub token not provided. Please set the GITHUB_TOKEN environment variable or enter the token when prompted.")
+        sys.exit(1)
+
+    github_username = args.github_username
+    if not github_username:
+        try:
+            github_username = subprocess.check_output(["git", "config", "github.user"]).strip().decode()
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            print("GitHub username not provided and could not be found in git config. Please use the --github-username flag or set it in your git config (git config --global github.user <username>).")
+            sys.exit(1)
+
+    create_github_repo(args.name, args.is_private, token)
+    create_ansible_role(args.name, args.repo_path, github_username)
+    push_to_github()
+
+if __name__ == "__main__":
+    main()
 
