@@ -97,11 +97,9 @@ def main():
     if not token:
         try:
             token = getpass.getpass("GitHub token not found. Please enter your GitHub personal access token: ")
-            os.environ["GITHUB_TOKEN"] = token
         except getpass.GetPassWarning:
             print("Could not read password securely.")
             token = input("GitHub token not found. Please enter your GitHub personal access token: ")
-            os.environ["GITHUB_TOKEN"] = token
 
     if not token:
         print("GitHub token not provided. Please set the GITHUB_TOKEN environment variable or enter the token when prompted.")
