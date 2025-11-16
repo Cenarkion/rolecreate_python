@@ -49,7 +49,7 @@ To create a new Ansible role, run the `rolecreate` script with the `-n` or `--na
 You can also specify the following optional arguments:
 - `--private` or `-p`: Create a private repository.
 - `--repo-path`: The path to the directory where the new role will be created (defaults to the current directory).
-- `--github-username`: Your GitHub username (the script will try to get it from your git config if not provided).
+- `--github-username`: Your GitHub username (the script will try to get it from your git config `user.name` if not provided).
 
 Example:
 ```bash

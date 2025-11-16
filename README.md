@@ -29,7 +29,7 @@ rolecreate -n <new_role_name> [options]
 -   `-n`, `--name`: (Required) The name of the new Ansible role.
 -   `-p`, `--private`: Create a private GitHub repository.
 -   `--repo-path`: The local path where the role directory will be created. Defaults to the current directory.
--   `--github-username`: Your GitHub username. The script will attempt to get this from your git configuration if not provided.
+-   `--github-username`: Your GitHub username. The script will attempt to get this from your git configuration (`user.name`) if not provided.
 
 ### GitHub Token
 

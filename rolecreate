@@ -100,9 +100,9 @@ def main():
     github_username = args.github_username
     if not github_username:
         try:
-            github_username = subprocess.check_output(["git", "config", "github.user"]).strip().decode()
+            github_username = subprocess.check_output(["git", "config", "user.name"]).strip().decode()
         except (subprocess.CalledProcessError, FileNotFoundError):
-            print("GitHub username not provided and could not be found in git config. Please use the --github-username flag or set it in your git config (git config --global github.user <username>).")
+            print("GitHub username not provided and could not be found in git config. Please use the --github-username flag or set it in your git config (git config --global user.name <username>).")
             sys.exit(1)
 
     create_github_repo(args.name, args.is_private, token)
