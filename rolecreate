@@ -89,6 +89,25 @@ def push_to_github():
         print(f"Error: {err}. Make sure 'git' is installed and in your PATH.")
         sys.exit(1)
 
+def update_script_in_path():
+    """Copies the script to ~/.local/bin/."""
+    try:
+        home_dir = os.path.expanduser("~")
+        local_bin_dir = os.path.join(home_dir, ".local", "bin")
+        if not os.path.exists(local_bin_dir):
+            os.makedirs(local_bin_dir)
+        
+        script_path = os.path.abspath(__file__)
+        destination = os.path.join(local_bin_dir, "rolecreate")
+        
+        subprocess.run(["cp", script_path, destination], check=True)
+        print(f"Successfully copied script to {destination}")
+    except (OSError, subprocess.CalledProcessError) as e:
+        print(f"Error copying script to {local_bin_dir}: {e}")
+        # Don't exit, as this is not a critical failure
+        pass
+
+
 def main():
     """Main function."""
     args = parse_arguments()
@@ -116,6 +135,7 @@ def main():
     create_github_repo(args.name, args.is_private, token)
     create_ansible_role(args.name, args.repo_path, github_username)
     push_to_github()
+    update_script_in_path()
 
 if __name__ == "__main__":
     main()
