@@ -10,7 +10,7 @@ The script uses the following technologies:
 ## File Descriptions
 
 - `rolecreate`: The main Python script that contains the logic for creating the Ansible role and GitHub repository.
-- `secrets.py`: This file is no longer used. The script now uses the `GITHUB_TOKEN` environment variable.
+- `secrets.py`: This file is no longer used.
 - `README.md`: The original README file for the project.
 
 # Building and Running
@@ -32,11 +32,11 @@ The script uses the following technologies:
     ```bash
     pip install requests
     ```
-3.  **Set `GITHUB_TOKEN` (optional):**
-    You can set the `GITHUB_TOKEN` environment variable to your GitHub personal access token. If you don't set it, the script will prompt you to enter it.
-    ```bash
-    export GITHUB_TOKEN='your_github_token'
-    ```
+3.  **GitHub Token Management:**
+    The script requires a GitHub personal access token with the `repo` scope. The token is managed as follows:
+    *   **Environment Variable:** The script first checks for the `GITHUB_TOKEN` environment variable. If set, it will use this token.
+    *   **Configuration File:** If the environment variable is not set, the script will look for a token in `~/.rolecreate/config.ini`.
+    *   **Interactive Prompt:** If the token is not found in either of the above, the script will securely prompt you to enter it. You will then be given the option to save it to `~/.rolecreate/config.ini` for future use. The configuration file will be created with secure permissions (read/write only for the owner).
 
 ## Running the script
 
@@ -53,7 +53,7 @@ You can also specify the following optional arguments:
 
 Example:
 ```bash
-./rolecreate -n my-new-private-role -p --repo-path /tmp/roles --github-username myuser
+./rolecreate -n my-new-private-role -p --repo-path /tmp/ansible/roles --github-username myuser
 ```
 
 # Development Conventions

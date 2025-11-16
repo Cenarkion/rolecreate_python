@@ -31,18 +31,13 @@ rolecreate -n <new_role_name> [options]
 -   `--repo-path`: The local path where the role directory will be created. Defaults to the current directory.
 -   `--github-username`: Your GitHub username. The script will attempt to get this from your git configuration (`user.name`) if not provided.
 
-### GitHub Token
+### GitHub Token Management
 
-The script needs a GitHub personal access token with the `repo` scope to create repositories on your behalf. You can provide the token in one of two ways:
+The script needs a GitHub personal access token with the `repo` scope to create repositories on your behalf. The token is managed as follows:
 
-1.  **Environment Variable (Recommended):**
-    Set the `GITHUB_TOKEN` environment variable before running the script.
-    ```bash
-    export GITHUB_TOKEN='your_github_token'
-    ./rolecreate -n my-new-role
-    ```
-2.  **Interactive Prompt:**
-    If the `GITHUB_TOKEN` environment variable is not set, the script will securely prompt you to enter it.
+1.  **Environment Variable:** The script first checks for the `GITHUB_TOKEN` environment variable. If set, it will use this token.
+2.  **Configuration File:** If the environment variable is not set, the script will look for a token in `~/.rolecreate/config.ini`.
+3.  **Interactive Prompt:** If the token is not found in either of the above, the script will securely prompt you to enter it. You will then be given the option to save it to `~/.rolecreate/config.ini` for future use. The configuration file will be created with secure permissions (read/write only for the owner).
 
 ### Example
 
