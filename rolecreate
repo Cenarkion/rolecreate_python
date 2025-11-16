@@ -36,25 +36,30 @@ def create_github_repo(repo_name, is_private, token):
 
 def create_ansible_role(repo_name, repo_path, github_username):
     """Creates a new Ansible role structure."""
+    # Use absolute paths to avoid issues with chdir
+    repo_path = os.path.abspath(repo_path)
     full_repo_path = os.path.join(repo_path, repo_name)
     roles_path = os.path.join(full_repo_path, "roles")
     
     try:
         os.makedirs(roles_path, exist_ok=True)
-    except FileExistsError:
-        print(f"Error: Directory '{roles_path}' already exists.")
+    except OSError as e:
+        print(f"Error creating directory {roles_path}: {e}")
         sys.exit(1)
 
     try:
-        os.chdir(roles_path)
-        subprocess.run(["ansible-galaxy", "init", repo_name], check=True, capture_output=True, text=True)
+        # Run ansible-galaxy init in the roles_path
+        subprocess.run(["ansible-galaxy", "init", repo_name], check=True, capture_output=True, text=True, cwd=roles_path)
         
+        # Change to the new repo's directory for git operations
         os.chdir(full_repo_path)
         subprocess.run(["git", "init"], check=True, capture_output=True, text=True)
         subprocess.run(["git", "remote", "add", "origin", f"git@github.com:{github_username}/{repo_name}.git"], check=True, capture_output=True, text=True)
         
-        os.rename(os.path.join(roles_path, repo_name, "README.md"), "README.md")
-        os.rename(os.path.join(roles_path, repo_name, "tests", "test.yml"), f"{repo_name}.yml")
+        # Now use absolute paths for moving files
+        ansible_role_path = os.path.join(roles_path, repo_name)
+        os.rename(os.path.join(ansible_role_path, "README.md"), os.path.join(full_repo_path, "README.md"))
+        os.rename(os.path.join(ansible_role_path, "tests", "test.yml"), os.path.join(full_repo_path, f"{repo_name}.yml"))
         
         print(f"Successfully created Ansible role structure in: {full_repo_path}")
 
@@ -64,6 +69,9 @@ def create_ansible_role(repo_name, repo_path, github_username):
         sys.exit(1)
     except FileNotFoundError as err:
         print(f"Error: {err}. Make sure 'ansible-galaxy' and 'git' are installed and in your PATH.")
+        sys.exit(1)
+    except OSError as e:
+        print(f"Error moving files: {e}")
         sys.exit(1)
 
 def push_to_github():
